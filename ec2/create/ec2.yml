@@ -54,6 +54,4 @@
     #     state: 'absent'
     #     region: us-east-1
     #     instance_ids: '{{ ec2.instance_ids }}'
-    #     aws_access_key: AKIAILYFHMEXPEASDRCA
-    #     aws_secret_key: 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
     #     key_name: mbro2
