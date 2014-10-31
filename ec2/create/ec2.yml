@@ -1,3 +1,4 @@
+---
 # Basic provisioning example
 #- local_action:
 #    module: ec2
@@ -8,32 +9,51 @@
 #    group: webserver
 #    count: 3
 
+# Must export the following environment variables:
+#   AWS_ACCESS_KEY
+#   AWS_SECRET_KEY
 
-- name: Create a sandbox instance
+- name: Create instance(s)
   hosts: localhost
   gather_facts: False
   vars:
-    key_name: mbro
+    key_name: mbro2
     instance_type: m1.small
     security_group_id: sg-33f9ff56
     image: ami-22ed474a
     region: us-east-1
   tasks:
-    - name: Launch instance
-      local_action: ec2 key_name={{ key_name }} group_id={{ security_group_id }} instance_type={{ instance_type }} image={{ image }} wait=yes region={{ region }} count=2
-      register: ec2
+    # - name: Launch instance
+    #   local_action: ec2 key_name={{ key_name }} group_id={{ security_group_id }} instance_type={{ instance_type }} image={{ image }} wait=yes region={{ region }} count=1
+    #   register: ec2
 
-    - name: Add new instance to host group
-      local_action: add_host hostname={{ item.public_ip }} groupname=mbro-grp1
-      with_items: ec2.instances
+#    - local_action: osx_say msg="Hosts are launched" voice=Zarvox
+    - local_action: osx_say msg="Hosts are launched" voice=Samantha
+#    - local_action: osx_say msg="Hosts are launched" voice="Bad News"
+
+    - name: Add new instance(s) to host group
+#      local_action: add_host hostname={{ item.public_ip }} groupname=launched
+      local_action: add_host hostname=ec2-54-173-94-5.compute-1.amazonaws.com groupname=launched
+#      with_items: ec2.instances
 
     - name: Wait for SSH to come up
-      local_action: wait_for host={{ item.public_dns_name }} port=22 delay=5 timeout=320 state=started
-      with_items: ec2.instances    
+#      local_action: wait_for host={{ item.public_dns_name }} port=22 delay=5 timeout=320 state=started
+      local_action: wait_for host={{ item }} port=22 delay=5 timeout=320 state=started
+#      with_items: ec2.instances    
+      with_items: launched
 
-    - name: Terminate instances that were previously launched
-      local_action:
-        module: ec2
-        state: 'absent'
-        region: us-east-1
-        instance_ids: '{{ ec2.instance_ids }}'
+- name: Create mbrocious user account
+  hosts: launched
+  tasks:
+  - user: name=mbrocious state=present group=sudo password=mbro generate_ssh_key=yes ssh_key_bits=2048
+
+
+    # - name: Terminate instances that were previously launched
+    #   local_action:
+    #     module: ec2
+    #     state: 'absent'
+    #     region: us-east-1
+    #     instance_ids: '{{ ec2.instance_ids }}'
+    #     aws_access_key: AKIAILYFHMEXPEASDRCA
+    #     aws_secret_key: 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
+    #     key_name: mbro2
